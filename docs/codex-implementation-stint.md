@@ -483,7 +483,7 @@ test: harden playback failure handling
 
 ---
 
-### Commit 6 — `docs: document NixOS transcription workflow`
+### [x] Commit 6 — `docs: document NixOS transcription workflow`
 
 #### Scope
 
