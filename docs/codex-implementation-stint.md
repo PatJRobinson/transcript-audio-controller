@@ -237,7 +237,7 @@ chore: scaffold transcript audio plugin
 
 ---
 
-### Commit 2 — `feat: add mpv JSON IPC transport`
+### [x] Commit 2 — `feat: add mpv JSON IPC transport`
 
 #### Scope
 
