@@ -191,7 +191,7 @@ Make **six commits**. Each commit should leave the repository in a coherent stat
 
 ---
 
-### Commit 1 — `chore: scaffold transcript audio plugin`
+### [x] Commit 1 — `chore: scaffold transcript audio plugin`
 
 #### Scope
 
