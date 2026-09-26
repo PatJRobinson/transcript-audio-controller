@@ -431,7 +431,7 @@ feat: add configurable playback keymaps
 
 ---
 
-### Commit 5 — `test: harden playback failure handling`
+### [x] Commit 5 — `test: harden playback failure handling`
 
 #### Scope
 

@@ -2,6 +2,7 @@
 """Small scenario-driven Unix socket server for transport tests."""
 
 import json
+import os
 import socket
 import sys
 import time
@@ -55,7 +56,7 @@ def respond(connection, scenario):
         send_json(connection, reply)
     elif scenario == "mpv_error":
         send_json(connection, {"request_id": 1, "error": "property unavailable"})
-    elif scenario == "eof":
+    elif scenario == "server_disappears":
         return
     elif scenario == "malformed":
         connection.sendall(b"{not-json}\n")
@@ -67,6 +68,8 @@ def respond(connection, scenario):
             send_json(connection, reply)
         except BrokenPipeError:
             pass
+    elif scenario.startswith("repeat-"):
+        send_json(connection, reply)
     else:
         raise RuntimeError(f"unknown scenario: {scenario}")
 
@@ -75,11 +78,13 @@ def main():
     if len(sys.argv) != 2:
         raise SystemExit(f"usage: {sys.argv[0]} SOCKET")
 
+    connection_count = int(os.environ.get("FAKE_MPV_CONNECTIONS", "10"))
+
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
         server.bind(sys.argv[1])
         server.listen()
 
-        for _ in range(10):
+        for _ in range(connection_count):
             connection, _ = server.accept()
             with connection:
                 respond(connection, receive_request(connection))

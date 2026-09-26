@@ -11,11 +11,18 @@ local cases = {
   { name = "event", data = "event" },
   { name = "unrelated", data = "unrelated" },
   { name = "mpv_error", error = "mpv error: property unavailable" },
-  { name = "eof", error = "mpv closed the connection before replying" },
+  { name = "server_disappears", error = "mpv closed the connection before replying" },
   { name = "malformed", error = "Malformed JSON from mpv" },
   { name = "malformed_reply", error = "Malformed reply from mpv" },
   { name = "timeout", error = "Timed out waiting for mpv", timeout_ms = 40 },
 }
+
+for index = 1, 20 do
+  cases[#cases + 1] = {
+    name = "repeat-" .. index,
+    data = "repeat-" .. index,
+  }
+end
 
 local watchdog = vim.defer_fn(function()
   error("IPC tests timed out")

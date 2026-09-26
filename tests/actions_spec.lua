@@ -122,6 +122,11 @@ assert_equal(#requests, 0, "invalid seek request count")
 assert(notifications[1].message:match("^Transcript audio:"), "invalid seek notification prefix")
 
 reset_test_state()
+vim.cmd("Audio unknown")
+assert_equal(#requests, 0, "unknown action request count")
+assert(notifications[1].message:match("^Transcript audio:"), "unknown action notification prefix")
+
+reset_test_state()
 next_error = "Cannot connect to mpv: connection refused"
 local ok, run_error = pcall(audio.run, "play")
 assert(ok, "transport error escaped as a stack trace: " .. tostring(run_error))

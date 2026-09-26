@@ -24,7 +24,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-python3 tests/fake_mpv.py "$test_socket" &
+FAKE_MPV_CONNECTIONS=30 python3 tests/fake_mpv.py "$test_socket" &
 server_pid=$!
 
 attempt=0
