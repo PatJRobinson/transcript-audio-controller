@@ -8,6 +8,10 @@ nvim --headless -u tests/minimal_init.lua \
   -c "lua dofile('tests/setup_spec.lua')" \
   -c "qa!"
 
+nvim --headless -u tests/minimal_init.lua \
+  -c "lua dofile('tests/actions_spec.lua')" \
+  -c "qa!"
+
 test_dir=$(mktemp -d)
 test_socket="$test_dir/mpv.sock"
 server_pid=

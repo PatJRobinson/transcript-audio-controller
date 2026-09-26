@@ -1,5 +1,8 @@
 local M = {}
 
+local actions = require("transcript_audio.actions")
+local ipc = require("transcript_audio.ipc")
+
 local DEFAULT_TIMEOUT_MS = 3000
 local SOCKET_NAME = "transcript-mpv.sock"
 
@@ -43,17 +46,116 @@ function M.resolve_config(opts)
   }
 end
 
-local function audio_placeholder(command)
-  vim.notify(
-    "Transcript audio: playback actions are not implemented yet (received: "
-      .. command.args
-      .. ")",
-    vim.log.levels.INFO
-  )
+local function notify_error(message)
+  vim.notify("Transcript audio: " .. message, vim.log.levels.WARN)
+end
+
+---Format an mpv time position for display.
+---@param seconds any
+---@return string|nil position
+---@return string|nil error
+function M.format_time(seconds)
+  if type(seconds) ~= "number"
+    or seconds < 0
+    or seconds ~= seconds
+    or seconds == math.huge
+    or seconds == -math.huge
+  then
+    return nil, "mpv returned no usable playback position"
+  end
+
+  local centiseconds = math.floor((seconds * 100) + 0.5)
+  local whole_seconds = math.floor(centiseconds / 100)
+  local fraction = centiseconds % 100
+  local display_seconds = whole_seconds % 60
+  local total_minutes = math.floor(whole_seconds / 60)
+  local display_minutes = total_minutes % 60
+  local hours = math.floor(total_minutes / 60)
+
+  if hours > 0 then
+    return string.format(
+      "%02d:%02d:%02d.%02d",
+      hours,
+      display_minutes,
+      display_seconds,
+      fraction
+    )
+  end
+
+  return string.format("%02d:%02d.%02d", display_minutes, display_seconds, fraction)
+end
+
+local function resolve_media_path(path)
+  local expanded = vim.fn.expand(path)
+  local absolute = vim.fn.fnamemodify(expanded, ":p")
+  if vim.fn.filereadable(absolute) ~= 1 then
+    return nil, "File is not readable: " .. absolute
+  end
+  return absolute
+end
+
+local function send(command, on_success)
+  ipc.request({
+    socket = M.config.socket,
+    timeout_ms = M.config.timeout_ms,
+    command = command,
+  }, function(err, data)
+    if err then
+      notify_error(err)
+      return
+    end
+    if on_success then
+      on_success(data)
+    end
+  end)
+end
+
+---Run a user-facing audio action.
+---@param action string|nil
+---@param argument string|number|nil
+function M.run(action, argument)
+  if action == "load" then
+    if argument == nil or tostring(argument):match("%S") == nil then
+      notify_error("Usage: :Audio load /path/to/file.mp3")
+      return
+    end
+
+    local path, path_error = resolve_media_path(tostring(argument))
+    if not path then
+      notify_error(path_error)
+      return
+    end
+    argument = path
+  end
+
+  local command, command_error = actions.command(action, argument)
+  if not command then
+    notify_error(command_error)
+    return
+  end
+
+  if action == "time" then
+    send(command, function(data)
+      local position, format_error = M.format_time(data)
+      if not position then
+        notify_error(format_error)
+        return
+      end
+      vim.notify("Audio: " .. position, vim.log.levels.INFO)
+    end)
+    return
+  end
+
+  send(command)
+end
+
+local function audio_command(command)
+  local action, argument = command.args:match("^(%S+)%s*(.*)$")
+  M.run(action, argument)
 end
 
 local function create_audio_command()
-  vim.api.nvim_create_user_command("Audio", audio_placeholder, {
+  vim.api.nvim_create_user_command("Audio", audio_command, {
     desc = "Control the transcript audio player",
     nargs = "+",
     force = true,

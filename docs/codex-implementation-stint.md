@@ -307,7 +307,7 @@ feat: add mpv JSON IPC transport
 
 ---
 
-### Commit 3 — `feat: implement audio command actions`
+### [x] Commit 3 — `feat: implement audio command actions`
 
 #### Scope
 
@@ -634,13 +634,13 @@ Use this checklist to track completion of the six commits. Check an item only af
   - [ ] Real-mpv smoke test performed when available, or explicitly recorded as unavailable.
   - [ ] Commit created with the exact planned subject.
 
-- [ ] **Commit 3 — `feat: implement audio command actions`**
-  - [ ] Action grammar and mpv command mapping are implemented and tested.
-  - [ ] `:Audio` parses full load paths, validates files and seek amounts, and handles invalid input cleanly.
-  - [ ] `:Audio time` formats valid positions and handles unusable data gracefully.
-  - [ ] Transport errors become concise user-facing notifications.
-  - [ ] Manual command verification is complete when real mpv and test media are available.
-  - [ ] Commit created with the exact planned subject.
+- [x] **Commit 3 — `feat: implement audio command actions`**
+  - [x] Action grammar and mpv command mapping are implemented and tested.
+  - [x] `:Audio` parses full load paths, validates files and seek amounts, and handles invalid input cleanly.
+  - [x] `:Audio time` formats valid positions and handles unusable data gracefully.
+  - [x] Transport errors become concise user-facing notifications.
+  - [x] Manual command verification is complete when real mpv and test media are available.
+  - [x] Commit created with the exact planned subject.
 
 - [ ] **Commit 4 — `feat: add configurable playback keymaps`**
   - [ ] All default normal-mode mappings are installed with descriptions.
