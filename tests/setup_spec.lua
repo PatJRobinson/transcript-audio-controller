@@ -43,8 +43,39 @@ audio.setup({ mappings = false })
 assert_equal(audio.config.mappings, false, "setup mapping switch")
 assert(vim.api.nvim_get_commands({ builtin = false }).Audio, "setup should create :Audio")
 
+local function normal_mapping(lhs)
+  for _, mapping in ipairs(vim.api.nvim_get_keymap("n")) do
+    if mapping.lhs == lhs then
+      return mapping
+    end
+  end
+end
+
+local function any_mapping(mode, lhs)
+  for _, mapping in ipairs(vim.api.nvim_get_keymap(mode)) do
+    if mapping.lhs == lhs then
+      return mapping
+    end
+  end
+end
+
+vim.g.mapleader = ","
 audio.setup({ socket = "/tmp/transcript-audio-second.sock" })
+for _, lhs in ipairs({
+  ",aa", ",ap", ",as", ",ah", ",al", ",aj", ",ak",
+  ",aH", ",aL", ",a0", ",a$", ",at",
+}) do
+  assert(normal_mapping(lhs), "default normal mapping missing: " .. lhs)
+  assert(not any_mapping("i", lhs), "default mapping must not be installed in insert mode: " .. lhs)
+end
+
 assert_equal(audio.config.socket, "/tmp/transcript-audio-second.sock", "repeated setup socket")
 assert(vim.api.nvim_get_commands({ builtin = false }).Audio, "repeated setup should keep :Audio")
+
+audio.setup({ socket = "/tmp/transcript-audio-third.sock" })
+assert(normal_mapping(",aa"), "repeated setup should keep default mappings")
+
+audio.setup({ mappings = false })
+assert(not normal_mapping(",aa"), "mappings=false should remove installed default mappings")
 
 print("transcript_audio setup tests passed")

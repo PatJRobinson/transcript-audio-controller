@@ -6,6 +6,31 @@ local ipc = require("transcript_audio.ipc")
 local DEFAULT_TIMEOUT_MS = 3000
 local SOCKET_NAME = "transcript-mpv.sock"
 
+local default_mappings = {
+  { "<leader>aa", "toggle", nil, "Toggle transcript audio" },
+  { "<leader>ap", "play", nil, "Play transcript audio" },
+  { "<leader>as", "pause", nil, "Pause transcript audio" },
+  { "<leader>ah", "back", 5, "Seek transcript audio back 5 seconds" },
+  { "<leader>al", "forward", 5, "Seek transcript audio forward 5 seconds" },
+  { "<leader>aj", "back", 10, "Seek transcript audio back 10 seconds" },
+  { "<leader>ak", "forward", 10, "Seek transcript audio forward 10 seconds" },
+  { "<leader>aH", "back", 30, "Seek transcript audio back 30 seconds" },
+  { "<leader>aL", "forward", 30, "Seek transcript audio forward 30 seconds" },
+  { "<leader>a0", "beginning", nil, "Seek transcript audio to beginning" },
+  { "<leader>a$", "end", nil, "Seek transcript audio to end" },
+  { "<leader>at", "time", nil, "Show transcript audio position" },
+}
+
+local installed_mapping_lhs = {}
+
+local function expand_leader(lhs)
+  local leader = vim.g.mapleader
+  if leader == nil then
+    leader = "\\"
+  end
+  return (lhs:gsub("<leader>", leader))
+end
+
 local function user_id()
   local uv = vim.uv or vim.loop
   if uv and uv.getuid then
@@ -162,9 +187,35 @@ local function create_audio_command()
   })
 end
 
+local function create_default_mappings()
+  for _, lhs in ipairs(installed_mapping_lhs) do
+    pcall(vim.keymap.del, "n", lhs)
+  end
+  installed_mapping_lhs = {}
+
+  for _, mapping in ipairs(default_mappings) do
+    local lhs, action, argument, description = unpack(mapping)
+    vim.keymap.set("n", lhs, function()
+      M.run(action, argument)
+    end, {
+      desc = description,
+      silent = true,
+    })
+    installed_mapping_lhs[#installed_mapping_lhs + 1] = expand_leader(lhs)
+  end
+end
+
 function M.setup(opts)
   M.config = M.resolve_config(opts)
   create_audio_command()
+  if M.config.mappings then
+    create_default_mappings()
+  else
+    for _, lhs in ipairs(installed_mapping_lhs) do
+      pcall(vim.keymap.del, "n", lhs)
+    end
+    installed_mapping_lhs = {}
+  end
 end
 
 M.config = M.resolve_config()

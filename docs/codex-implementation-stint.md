@@ -381,7 +381,7 @@ feat: implement audio command actions
 
 ---
 
-### Commit 4 — `feat: add configurable playback keymaps`
+### [x] Commit 4 — `feat: add configurable playback keymaps`
 
 #### Scope
 
@@ -642,12 +642,12 @@ Use this checklist to track completion of the six commits. Check an item only af
   - [x] Manual command verification is complete when real mpv and test media are available.
   - [x] Commit created with the exact planned subject.
 
-- [ ] **Commit 4 — `feat: add configurable playback keymaps`**
-  - [ ] All default normal-mode mappings are installed with descriptions.
-  - [ ] Existing `mapleader` is respected and insert mode is unaffected.
-  - [ ] `mappings = false`, socket overrides, and environment socket resolution are verified.
-  - [ ] Headless mapping assertions and interactive sanity check pass.
-  - [ ] Commit created with the exact planned subject.
+- [x] **Commit 4 — `feat: add configurable playback keymaps`**
+  - [x] All default normal-mode mappings are installed with descriptions.
+  - [x] Existing `mapleader` is respected and insert mode is unaffected.
+  - [x] `mappings = false`, socket overrides, and environment socket resolution are verified.
+  - [x] Headless mapping assertions and interactive sanity check pass.
+  - [x] Commit created with the exact planned subject.
 
 - [ ] **Commit 5 — `test: harden playback failure handling`**
   - [ ] Failure, race, cleanup, repeated-request, invalid-command, repeated-setup, and no-position scenarios have regression coverage.
