@@ -73,6 +73,7 @@ The plugin provides one Ex command: `:Audio <action> [argument]`. Actions are ca
 | `:Audio play` | Resume playback. |
 | `:Audio pause` | Pause playback. |
 | `:Audio toggle` | Toggle pause state. |
+| `:Audio speed 80%` | Set playback speed to 80%; values from 0% through 200% are accepted. The `%` suffix is optional. |
 | `:Audio beginning` | Seek to the beginning. |
 | `:Audio end` | Seek to the end. |
 | `:Audio forward 5` | Seek forward 5 seconds. |
@@ -84,6 +85,8 @@ The plugin provides one Ex command: `:Audio <action> [argument]`. Actions are ca
 | `:Audio time` | Show the current position, for example `Audio: 14:32.18`. |
 
 Seek amounts are deliberately limited to exactly 5, 10, or 30 seconds. A successful `loadfile` response means that `mpv` accepted the command; it does not verify that the media has finished opening.
+
+Playback speed is set with a percentage from `0` to `200`, inclusive. For example, `:Audio speed 50%` plays at half speed and `:Audio speed 125` plays at 1.25× speed. Decimal percentages such as `87.5%` are supported; negative values, values above 200%, and nonnumeric values are rejected before contacting mpv.
 
 ## Default mappings
 

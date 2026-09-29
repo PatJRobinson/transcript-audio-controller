@@ -18,6 +18,11 @@ local command_cases = {
   { "back", "5", { "seek", -5, "relative" } },
   { "back", "10", { "seek", -10, "relative" } },
   { "back", "30", { "seek", -30, "relative" } },
+  { "speed", "0", { "set_property", "speed", 0 } },
+  { "speed", "50", { "set_property", "speed", 0.5 } },
+  { "speed", "125%", { "set_property", "speed", 1.25 } },
+  { "speed", "200%", { "set_property", "speed", 2 } },
+  { "speed", "87.5%", { "set_property", "speed", 0.875 } },
   { "time", nil, { "get_property", "time-pos" } },
   { "load", "/tmp/interview with spaces.mp3", { "loadfile", "/tmp/interview with spaces.mp3", "replace" } },
 }
@@ -33,6 +38,10 @@ local invalid_cases = {
   { "forward", nil, "missing seek amount" },
   { "forward", "7", "unsupported seek amount" },
   { "back", "soon", "nonnumeric seek amount" },
+  { "speed", nil, "missing speed percentage" },
+  { "speed", "fast", "nonnumeric speed percentage" },
+  { "speed", "201", "speed percentage above range" },
+  { "speed", "-1%", "negative speed percentage" },
   { "unknown", nil, "unknown action" },
 }
 
@@ -120,6 +129,16 @@ reset_test_state()
 vim.cmd("Audio forward 7")
 assert_equal(#requests, 0, "invalid seek request count")
 assert(notifications[1].message:match("^Transcript audio:"), "invalid seek notification prefix")
+
+reset_test_state()
+vim.cmd("Audio speed 201%")
+assert_equal(#requests, 0, "invalid speed request count")
+assert(notifications[1].message:match("^Transcript audio:"), "invalid speed notification prefix")
+
+reset_test_state()
+vim.cmd("Audio speed 75%")
+assert_equal(#requests, 1, "speed request count")
+assert_equal(requests[1].command, { "set_property", "speed", 0.75 }, "speed request command")
 
 reset_test_state()
 vim.cmd("Audio unknown")
