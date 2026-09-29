@@ -43,6 +43,12 @@ To disable all default mappings:
 require("transcript_audio").setup({ mappings = false })
 ```
 
+Notation mappings can be disabled while keeping playback mappings:
+
+```lua
+require("transcript_audio").setup({ notation_mappings = false })
+```
+
 The plugin preserves the existing `mapleader` value. Calling `setup()` again updates the configuration and replaces the plugin's own mappings without changing unrelated mappings.
 
 ## Start mpv on NixOS
@@ -106,6 +112,67 @@ The mappings are normal-mode only, so typing transcript text in insert mode is u
 | `<leader>a0` | Beginning |
 | `<leader>a$` | End |
 | `<leader>at` | Show position |
+
+## Transcription notation
+
+The notation helpers insert the fixed conventions from the transcription
+protocol directly into the current buffer. They operate locally on the
+transcript and do not send text or audio anywhere.
+
+The default notation prefix is `<C-g>` and the mappings are insert-mode
+mappings, so they can be used without leaving the typing flow:
+
+| Mapping | Result |
+| --- | --- |
+| `<C-g>c` | `((coughs))` |
+| `<C-g>l` | `((laughs))` |
+| `<C-g>g` | `((General laughter))` on its own line |
+| `<C-g>p` | `((pause))` |
+| `<C-g>.` | `(.)` |
+| `<C-g>P` | `((long pause))` |
+| `<C-g>s` | `((sighs))` |
+| `<C-g>x` | `((long exhale))` |
+| `<C-g>i` | `((inaudible))` |
+| `<C-g>o` | `((in overlap))` |
+| `<C-g>u` | Insert `()` with the cursor inside |
+| `<C-g>q` | Insert `""` with the cursor inside |
+| `<C-g>a` | Insert `[]` with the cursor inside |
+
+The uncertainty, reported-speech, and anonymisation mappings also work in
+visual mode and wrap the selected text in `()`, `""`, or `[]` respectively.
+Inline markers add only the necessary surrounding spaces and avoid adding a
+space before punctuation. Shared laughter is separated onto its own line.
+
+The same insertions are available through `:TranscriptNote`, for example:
+
+```vim
+:TranscriptNote coughs
+:TranscriptNote inaudible
+:TranscriptNote anonymise
+```
+
+The complete notation names can be completed after `:TranscriptNote`.
+
+The notation prefix and individual mappings can be changed without changing
+the audio mappings:
+
+```lua
+require("transcript_audio").setup({
+  notation_prefix = "<C-x>",
+  notation_keys = {
+    coughs = "<C-x>c",
+    laughs = "<C-x>l",
+  },
+})
+```
+
+The protocol requires italics for media names and underlining for analytically
+important emphasis, but does not define a representation for those features in
+the plain-text transcript. The plugin therefore does not assume Markdown,
+HTML, or terminal styling for them. They remain ordinary visual editing until
+the project convention is fixed. The underlying visual wrapper is available
+to custom Lua mappings through
+`require("transcript_audio.notation").wrap_selection(left, right)`.
 
 ## SSH workflow
 

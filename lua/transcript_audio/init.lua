@@ -2,6 +2,7 @@ local M = {}
 
 local actions = require("transcript_audio.actions")
 local ipc = require("transcript_audio.ipc")
+local notation = require("transcript_audio.notation")
 
 local DEFAULT_TIMEOUT_MS = 3000
 local SOCKET_NAME = "transcript-mpv.sock"
@@ -21,7 +22,26 @@ local default_mappings = {
   { "<leader>at", "time", nil, "Show transcript audio position" },
 }
 
-local installed_mapping_lhs = {}
+local default_notation_mappings = {
+  { "coughs", "c", "i" },
+  { "laughs", "l", "i" },
+  { "general_laughter", "g", "i" },
+  { "pause", "p", "i" },
+  { "short_pause", ".", "i" },
+  { "long_pause", "P", "i" },
+  { "sighs", "s", "i" },
+  { "long_exhale", "x", "i" },
+  { "inaudible", "i", "i" },
+  { "overlap", "o", "i" },
+  { "uncertain", "u", "i" },
+  { "reported", "q", "i" },
+  { "anonymise", "a", "i" },
+  { "uncertain", "u", "x" },
+  { "reported", "q", "x" },
+  { "anonymise", "a", "x" },
+}
+
+local installed_mappings = {}
 
 local function expand_leader(lhs)
   local leader = vim.g.mapleader
@@ -68,6 +88,9 @@ function M.resolve_config(opts)
     socket = resolve_socket(opts),
     timeout_ms = opts.timeout_ms ~= nil and opts.timeout_ms or DEFAULT_TIMEOUT_MS,
     mappings = opts.mappings == nil and true or opts.mappings,
+    notation_mappings = opts.notation_mappings == nil and true or opts.notation_mappings,
+    notation_prefix = opts.notation_prefix or "<C-g>",
+    notation_keys = opts.notation_keys or {},
   }
 end
 
@@ -135,6 +158,33 @@ local function send(command, on_success)
   end)
 end
 
+local function notify_notation_error(message)
+  vim.notify("Transcript notation: " .. message, vim.log.levels.WARN)
+end
+
+local function run_notation(name)
+  local ok, error_message = notation.insert(name)
+  if not ok then
+    notify_notation_error(error_message)
+  end
+end
+
+local function wrap_notation(name)
+  local ok, error_message = notation.wrap(name)
+  if not ok then
+    notify_notation_error(error_message)
+  end
+end
+
+local function transcript_note_command(command)
+  if command.args == "" then
+    notify_notation_error("Usage: :TranscriptNote <notation>")
+    return
+  end
+
+  run_notation(command.args)
+end
+
 ---Run a user-facing audio action.
 ---@param action string|nil
 ---@param argument string|number|nil
@@ -187,34 +237,74 @@ local function create_audio_command()
   })
 end
 
-local function create_default_mappings()
-  for _, lhs in ipairs(installed_mapping_lhs) do
-    pcall(vim.keymap.del, "n", lhs)
-  end
-  installed_mapping_lhs = {}
+local function create_transcript_note_command()
+  vim.api.nvim_create_user_command("TranscriptNote", transcript_note_command, {
+    desc = "Insert transcript notation",
+    nargs = 1,
+    complete = notation.names,
+    force = true,
+  })
+end
 
+local function clear_installed_mappings()
+  for _, mapping in ipairs(installed_mappings) do
+    pcall(vim.keymap.del, mapping.mode, mapping.lhs)
+  end
+  installed_mappings = {}
+end
+
+local function install_mapping(mode, lhs, callback, description)
+  vim.keymap.set(mode, lhs, callback, {
+    desc = description,
+    silent = true,
+  })
+  installed_mappings[#installed_mappings + 1] = {
+    mode = mode,
+    lhs = expand_leader(lhs),
+  }
+end
+
+local function create_default_audio_mappings()
   for _, mapping in ipairs(default_mappings) do
     local lhs, action, argument, description = unpack(mapping)
-    vim.keymap.set("n", lhs, function()
+    install_mapping("n", lhs, function()
       M.run(action, argument)
-    end, {
-      desc = description,
-      silent = true,
-    })
-    installed_mapping_lhs[#installed_mapping_lhs + 1] = expand_leader(lhs)
+    end, description)
+  end
+end
+
+local function create_default_notation_mappings()
+  for _, mapping in ipairs(default_notation_mappings) do
+    local name, suffix, mode = unpack(mapping)
+    local configured_key = M.config.notation_keys[name]
+    local lhs = configured_key or (M.config.notation_prefix .. suffix)
+
+    if configured_key ~= false then
+      local description = notation.description(name)
+      if mode == "x" then
+        install_mapping(mode, lhs, function()
+          wrap_notation(name)
+        end, "Wrap selection as " .. name)
+      else
+        install_mapping(mode, lhs, function()
+          run_notation(name)
+        end, description)
+      end
+    end
   end
 end
 
 function M.setup(opts)
   M.config = M.resolve_config(opts)
   create_audio_command()
+  create_transcript_note_command()
+  clear_installed_mappings()
+
   if M.config.mappings then
-    create_default_mappings()
-  else
-    for _, lhs in ipairs(installed_mapping_lhs) do
-      pcall(vim.keymap.del, "n", lhs)
-    end
-    installed_mapping_lhs = {}
+    create_default_audio_mappings()
+  end
+  if M.config.mappings and M.config.notation_mappings then
+    create_default_notation_mappings()
   end
 end
 
