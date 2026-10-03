@@ -20,6 +20,7 @@ local default_mappings = {
   { "<leader>a0", "beginning", nil, "Seek transcript audio to beginning" },
   { "<leader>a$", "end", nil, "Seek transcript audio to end" },
   { "<leader>at", "time", nil, "Show transcript audio position" },
+  { "<leader>ag", "seek_prompt", nil, "Jump transcript audio to a timestamp" },
 }
 
 local default_notation_mappings = {
@@ -185,10 +186,25 @@ local function transcript_note_command(command)
   run_notation(command.args)
 end
 
+local function prompt_for_seek()
+  vim.ui.input({
+    prompt = "Audio position (MM:SS or HH:MM:SS): ",
+  }, function(value)
+    if value and value:match("%S") then
+      M.run("seek", value)
+    end
+  end)
+end
+
 ---Run a user-facing audio action.
 ---@param action string|nil
 ---@param argument string|number|nil
 function M.run(action, argument)
+  if action == "seek_prompt" then
+    prompt_for_seek()
+    return
+  end
+
   if action == "load" then
     if argument == nil or tostring(argument):match("%S") == nil then
       notify_error("Usage: :Audio load /path/to/file.mp3")
@@ -303,7 +319,7 @@ function M.setup(opts)
   if M.config.mappings then
     create_default_audio_mappings()
   end
-  if M.config.mappings and M.config.notation_mappings then
+  if M.config.notation_mappings then
     create_default_notation_mappings()
   end
 end

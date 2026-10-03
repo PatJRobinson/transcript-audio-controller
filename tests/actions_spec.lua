@@ -18,6 +18,9 @@ local command_cases = {
   { "back", "5", { "seek", -5, "relative" } },
   { "back", "10", { "seek", -10, "relative" } },
   { "back", "30", { "seek", -30, "relative" } },
+  { "seek", "14:32", { "seek", 872, "absolute" } },
+  { "seek", "01:02:03.50", { "seek", 3723.5, "absolute" } },
+  { "seek", "872.18", { "seek", 872.18, "absolute" } },
   { "speed", "0", { "set_property", "speed", 0 } },
   { "speed", "50", { "set_property", "speed", 0.5 } },
   { "speed", "125%", { "set_property", "speed", 1.25 } },
@@ -38,6 +41,10 @@ local invalid_cases = {
   { "forward", nil, "missing seek amount" },
   { "forward", "7", "unsupported seek amount" },
   { "back", "soon", "nonnumeric seek amount" },
+  { "seek", nil, "missing timestamp" },
+  { "seek", "14:60", "timestamp seconds above range" },
+  { "seek", "1:60:00", "timestamp minutes above range" },
+  { "seek", "not-a-time", "invalid timestamp" },
   { "speed", nil, "missing speed percentage" },
   { "speed", "fast", "nonnumeric speed percentage" },
   { "speed", "201", "speed percentage above range" },
@@ -139,6 +146,15 @@ reset_test_state()
 vim.cmd("Audio speed 75%")
 assert_equal(#requests, 1, "speed request count")
 assert_equal(requests[1].command, { "set_property", "speed", 0.75 }, "speed request command")
+
+reset_test_state()
+vim.cmd("Audio seek 14:32.18")
+assert_equal(#requests, 1, "absolute seek request count")
+assert_equal(
+  requests[1].command,
+  { "seek", 872.18, "absolute" },
+  "absolute seek request command"
+)
 
 reset_test_state()
 vim.cmd("Audio unknown")

@@ -110,11 +110,12 @@ Expose one Ex command: `:Audio <action> [argument]`. Actions are case-sensitive 
 | `:Audio speed 80%` | Set playback speed to 80% (the `%` suffix is optional) | `["set_property", "speed", 0.8]` |
 | `:Audio beginning` | Seek to zero | `["seek", 0, "absolute"]` |
 | `:Audio end` | Seek to end | `["seek", 100, "absolute-percent"]` |
+| `:Audio seek 14:32` | Seek to an absolute timestamp | `["seek", 872, "absolute"]` |
 | `:Audio forward 5/10/30` | Seek forward by seconds | `["seek", N, "relative"]` |
 | `:Audio back 5/10/30` | Seek backward by seconds | `["seek", -N, "relative"]` |
 | `:Audio time` | Display current playback position | `["get_property", "time-pos"]` |
 
-**Parsing:** `load` consumes all text after its first space as the path (filenames may contain spaces); expand a leading `~` and resolve to an absolute host path. Check that the file is readable before sending. Validate that seek amounts are exactly 5, 10, or 30 for the initial UI. `speed` accepts numeric percentages from 0 through 200, inclusive, and sends the corresponding mpv multiplier. Document that loading a file starts playback; `pause` remains a separate operation. `time` is a small quality-of-life extra, not a continuously refreshed status indicator.
+**Parsing:** `load` consumes all text after its first space as the path (filenames may contain spaces); expand a leading `~` and resolve to an absolute host path. Check that the file is readable before sending. Validate that relative seek amounts are exactly 5, 10, or 30 for the initial UI. Absolute `seek` accepts `MM:SS`, `HH:MM:SS`, or non-negative raw seconds and converts them to seconds before sending. `speed` accepts numeric percentages from 0 through 200, inclusive, and sends the corresponding mpv multiplier. Document that loading a file starts playback; `pause` remains a separate operation. `time` is a small quality-of-life extra, not a continuously refreshed status indicator.
 
 **End semantics:** The native `absolute-percent` seek is adequate for an MVP. When playback has reached EOF, users may need `:Audio play` after seeking backwards. Do not hide that behaviour with surprising implicit pause changes unless a tested UX decision calls for it.
 
@@ -131,6 +132,7 @@ Expose one Ex command: `:Audio <action> [argument]`. Actions are case-sensitive 
 | `<leader>a0` | beginning |
 | `<leader>a$` | end |
 | `<leader>at` | show current position |
+| `<leader>ag` | prompt for an absolute timestamp |
 
 Mappings should be normal-mode only, to avoid intercepting typed transcript text. Support a `setup(opts)` function or a small, clearly documented configuration point so the socket path and mappings can be customised. Preserve the user's existing `<leader>` setting; never overwrite it.
 

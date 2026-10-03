@@ -41,6 +41,76 @@ local function speed_command(argument)
   return { "set_property", "speed", percentage / 100 }
 end
 
+local function parse_timestamp(argument)
+  if not has_argument(argument) then
+    return nil, "Timestamp is required (use MM:SS or HH:MM:SS)"
+  end
+
+  local timestamp = tostring(argument):match("^%s*(.-)%s*$")
+  local parts = {}
+  for part in timestamp:gmatch("[^:]+") do
+    parts[#parts + 1] = part
+  end
+
+  if timestamp == "" or timestamp:match("^:") or timestamp:match(":$")
+    or timestamp:find("::", 1, true)
+  then
+    return nil, "Timestamp must be MM:SS, HH:MM:SS, or seconds"
+  end
+
+  local seconds
+  if #parts == 1 then
+    if not parts[1]:match("^%d+%.?%d*$") then
+      return nil, "Timestamp must be MM:SS, HH:MM:SS, or seconds"
+    end
+    seconds = tonumber(parts[1])
+  elseif #parts == 2 then
+    if not parts[1]:match("^%d+$") or not parts[2]:match("^%d+%.?%d*$") then
+      return nil, "Timestamp must be MM:SS, HH:MM:SS, or seconds"
+    end
+    local minutes = tonumber(parts[1])
+    local remaining = tonumber(parts[2])
+    if remaining >= 60 then
+      return nil, "Timestamp seconds must be less than 60"
+    end
+    seconds = minutes * 60 + remaining
+  elseif #parts == 3 then
+    if not parts[1]:match("^%d+$")
+      or not parts[2]:match("^%d+$")
+      or not parts[3]:match("^%d+%.?%d*$")
+    then
+      return nil, "Timestamp must be MM:SS, HH:MM:SS, or seconds"
+    end
+    local hours = tonumber(parts[1])
+    local minutes = tonumber(parts[2])
+    local remaining = tonumber(parts[3])
+    if minutes >= 60 then
+      return nil, "Timestamp minutes must be less than 60"
+    end
+    if remaining >= 60 then
+      return nil, "Timestamp seconds must be less than 60"
+    end
+    seconds = hours * 3600 + minutes * 60 + remaining
+  else
+    return nil, "Timestamp must be MM:SS, HH:MM:SS, or seconds"
+  end
+
+  if not seconds or seconds < 0 or seconds == math.huge then
+    return nil, "Timestamp must be non-negative"
+  end
+  return seconds
+end
+
+local function seek_command(argument)
+  local seconds, error_message = parse_timestamp(argument)
+  if not seconds then
+    return nil, error_message
+  end
+  return { "seek", seconds, "absolute" }
+end
+
+M.parse_timestamp = parse_timestamp
+
 ---Convert a validated user-facing action into an mpv command array.
 ---@param action string|nil
 ---@param argument string|number|nil
@@ -60,6 +130,10 @@ function M.command(action, argument)
 
   if action == "speed" then
     return speed_command(argument)
+  end
+
+  if action == "seek" then
+    return seek_command(argument)
   end
 
   if action == "forward" or action == "back" then

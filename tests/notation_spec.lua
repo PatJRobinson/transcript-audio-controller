@@ -85,6 +85,12 @@ assert(vim.fn.maparg("<C-g>u", "x") ~= "", "visual uncertainty mapping missing")
 assert(vim.fn.maparg("<C-g>c", "n") == "", "notation mapping must not be normal-mode mapping")
 
 audio.setup({
+  mappings = false,
+})
+assert(vim.fn.maparg("<C-g>c", "i") ~= "", "notation mappings should be independent of playback mappings")
+assert(vim.fn.maparg("\\aa", "n") == "", "playback mappings should be disabled")
+
+audio.setup({
   mappings = true,
   notation_mappings = false,
 })

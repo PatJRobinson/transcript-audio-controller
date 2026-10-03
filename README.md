@@ -37,7 +37,7 @@ require("transcript_audio").setup({
 })
 ```
 
-To disable all default mappings:
+To disable the default playback mappings:
 
 ```lua
 require("transcript_audio").setup({ mappings = false })
@@ -48,6 +48,8 @@ Notation mappings can be disabled while keeping playback mappings:
 ```lua
 require("transcript_audio").setup({ notation_mappings = false })
 ```
+
+To disable both sets, use both options.
 
 The plugin preserves the existing `mapleader` value. Calling `setup()` again updates the configuration and replaces the plugin's own mappings without changing unrelated mappings.
 
@@ -82,6 +84,7 @@ The plugin provides one Ex command: `:Audio <action> [argument]`. Actions are ca
 | `:Audio speed 80%` | Set playback speed to 80%; values from 0% through 200% are accepted. The `%` suffix is optional. |
 | `:Audio beginning` | Seek to the beginning. |
 | `:Audio end` | Seek to the end. |
+| `:Audio seek 14:32` | Seek to an absolute timestamp. `MM:SS`, `HH:MM:SS`, and raw seconds are accepted. |
 | `:Audio forward 5` | Seek forward 5 seconds. |
 | `:Audio forward 10` | Seek forward 10 seconds. |
 | `:Audio forward 30` | Seek forward 30 seconds. |
@@ -93,6 +96,8 @@ The plugin provides one Ex command: `:Audio <action> [argument]`. Actions are ca
 Seek amounts are deliberately limited to exactly 5, 10, or 30 seconds. A successful `loadfile` response means that `mpv` accepted the command; it does not verify that the media has finished opening.
 
 Playback speed is set with a percentage from `0` to `200`, inclusive. For example, `:Audio speed 50%` plays at half speed and `:Audio speed 125` plays at 1.25× speed. Decimal percentages such as `87.5%` are supported; negative values, values above 200%, and nonnumeric values are rejected before contacting mpv.
+
+Absolute seeking accepts timestamps such as `14:32`, `01:02:03.50`, or raw seconds such as `872.18`. The seek is sent directly to mpv and does not insert a timestamp into the transcript.
 
 ## Default mappings
 
@@ -112,6 +117,7 @@ The mappings are normal-mode only, so typing transcript text in insert mode is u
 | `<leader>a0` | Beginning |
 | `<leader>a$` | End |
 | `<leader>at` | Show position |
+| `<leader>ag` | Prompt for an absolute timestamp |
 
 ## Transcription notation
 
